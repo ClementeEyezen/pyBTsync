@@ -17,17 +17,12 @@ local.properties
 .loadpath
 
 #example files
-# didn't work /k_NOW/sample_test/Ch2
-Ch2/
-Ch3/
-Ch4/
-Ch5/
-lynda_sample_test/
 
 #sensitive info
 client_secrets.json
 sample.dat
 nothing_here.smiley
+example_config.txt
 
 #extra stuff
 *.md~
