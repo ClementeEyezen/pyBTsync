@@ -357,7 +357,10 @@ def get_folder_hosts(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(),
     
 def set_folder_hosts(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret, host_list, port_list):
     '''
-    Sets one or several predefined hosts for the specified sync folder. Existing list of hosts will be replaced. Hosts should be added as values of the ‘host’ parameter and separated by commas. Returns current hosts if set successfully, error code otherwise.
+    Sets one or several predefined hosts for the specified sync folder. 
+    Existing list of hosts will be replaced. 
+    Hosts should be added as values of the ‘host’ parameter and separated by commas. 
+    Returns current hosts if set successfully, error code otherwise.
     
     http://[address]:[port]/api?method=set_folder_hosts&secret=(secret)&hosts=host1:port1,host2:port2,...
     
@@ -385,10 +388,11 @@ def set_folder_hosts(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(),
         return host_info
     
     
-def get_preferences():
+def get_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret, host_list, port_list):
     '''
-    Returns BitTorrent Sync preferences. Contains dictionary with advanced preferences. Please see Sync user guide for description of each option.
-    
+    Returns BitTorrent Sync preferences. 
+    Contains dictionary with advanced preferences. 
+    Please see Sync user guide for description of each option.
     {
         "device_name" : "iMac",
         "disk_low_priority": "true",
@@ -411,8 +415,18 @@ def get_preferences():
     
     http://[address]:[port]/api?method=get_prefs
     '''
+    c = curl_obj
+    data = BytesIO
+    if isinstance(address,basestring) and isinstance(port,basestring):
+        c.setopt(c.URL, 'http://'+address+':'+port+'/api?method=get_prefs')
+        c.setopt(c.WRITEFUNCTION,data.write)
+        c.perform()
+        host_info = data.getvalue() # the json info
+        #return the json info, format as follows
+        return host_info
     
-def set_preferences():
+def set_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), 
+                    device_name, download_limit, lang, listening_port, upload_limit, use_upnp):
     '''
     Sets BitTorrent Sync preferences. Parameters are the same as in ‘Get preferences’. 
     Advanced preferences are set as general settings. 
@@ -420,10 +434,33 @@ def set_preferences():
     
     http://[address]:[port]/api?method=set_prefs&param1=value1&param2=value2,...
     
-    params - { device_name, download_limit, lang, listening_port, upload_limit, use_upnp } and advanced settings. You can find more information about advanced settings in user guide.
+    params - { device_name, download_limit, lang, listening_port, upload_limit, use_upnp } and advanced settings. 
+    You can find more information about advanced settings in user guide.
     '''
+    c = curl_obj
+    data = BytesIO
+    if isinstance(address,basestring) and isinstance(port,basestring):
+        url = 'http://'+address+':'+port+'/api?method=set_prefs'
+        if isinstance(device_name,basestring):
+            url = url + '&param1='+device_name
+        if isinstance(download_limit,(int)):
+            url = url + '&param2='+str(download_limit)
+        if isinstance(lang,basestring):
+            url = url + '&param3='+str(lang)
+        if isinstance(listening_port,(int)):
+            url = url + '&param4='+str(listening_port)
+        if isinstance(upload_limit,(int)):
+            url = url + '&param5='+str(upload_limit)
+        if isinstance(use_upnp,(int)):
+            url = url + '&param6='+str(use_upnp%2)
+        c.setopt(c.URL, url)
+        c.setopt(c.WRITEFUNCTION,data.write)
+        c.perform()
+        preferences = data.getvalue() # the json info
+        #return the json info, format as follows
+        return preferences
     
-def get_os_name():
+def get_os_name(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Returns OS name where BitTorrent Sync is running.
     
@@ -431,8 +468,17 @@ def get_os_name():
     
     http://[address]:[port]/api?method=get_os
     '''
+    c = curl_obj
+    data = BytesIO
+    if isinstance(address,basestring) and isinstance(port,basestring):
+        c.setopt(c.URL, 'http://'+address+':'+port+'/api?method=get_os')
+        c.setopt(c.WRITEFUNCTION,data.write)
+        c.perform()
+        os_info = data.getvalue() # the json info
+        #return the json info, format as follows
+        return os_info
     
-def get_version():
+def get_version(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Returns BitTorrent Sync version.
     
@@ -440,8 +486,17 @@ def get_version():
     
     http://[address]:[port]/api?method=get_version
     '''
+    c = curl_obj
+    data = BytesIO
+    if isinstance(address,basestring) and isinstance(port,basestring):
+        c.setopt(c.URL, 'http://'+address+':'+port+'/api?method=get_version')
+        c.setopt(c.WRITEFUNCTION,data.write)
+        c.perform()
+        version_info = data.getvalue() # the json info
+        #return the json info, format as follows
+        return version_info
     
-def get_speed():
+def get_speed(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Returns current upload and download speed.
     
@@ -452,8 +507,17 @@ def get_speed():
     
     http://[address]:[port]/api?method=get_speed
     '''
+    c = curl_obj
+    data = BytesIO
+    if isinstance(address,basestring) and isinstance(port,basestring):
+        c.setopt(c.URL, 'http://'+address+':'+port+'/api?method=get_speed')
+        c.setopt(c.WRITEFUNCTION,data.write)
+        c.perform()
+        speed_info = data.getvalue() # the json info
+        #return the json info, format as follows
+        return speed_info
     
-def shutdown():
+def shutdown(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Gracefully stops Sync.
     
@@ -461,3 +525,17 @@ def shutdown():
     
     http://[address]:[port]/api?method=shutdown
     '''
+    c = curl_obj
+    data = BytesIO
+    if isinstance(address,basestring) and isinstance(port,basestring):
+        url = 'http://'+address+':'+port+'/api?method=shutdown'
+        c.setopt(c.URL, url)
+        c.setopt(c.WRITEFUNCTION,data.write)
+        c.perform()
+    
+        error_info = json.loads(data.getvalue()) # the json info
+        error = error_info["error"]
+        #return the json info, format as follows
+        return error
+    
+    
