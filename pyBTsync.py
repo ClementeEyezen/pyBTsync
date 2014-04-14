@@ -1,5 +1,5 @@
 import subprocess
-import os.path
+from os import path
 import shutil
 import json
 from io import BytesIO
@@ -7,27 +7,37 @@ import pycurl
 
 def main():
     #run this
-    pass
+    btsync_folder = '/home/buck/Downloads/'
+    config_location = '/home/buck/Github/pyBTsync/example_config.txt'
+    address,port = start(btsync_folder,config_location)
+    print('address '+address)
+    print('port    '+port)
+    print(get_folders())
     
 
 def start(btsync_location, config_storage_path):
     #start up the BitTorrent Client
-    fname = os.path.join(config_storage_path,r"btsync_config.txt")
-    if os.path.isfile(fname):
+    fname = path.join(config_storage_path,r"btsync_config.txt")
+    if path.isfile(fname):
         # if the config file is there
         pass
     else:
         # else copy to the proper place a new config file with the correct settings
-        shutil.copyfile(fname,r"example_config.txt")
+        open(fname, 'w').close()
+        shutil.copyfile(r"example_config.txt",fname)
     
     # now the config file should be in the correct place, so now we can launch the program
     # call the btsync process, with --config flag, pointing to the config file
-    subprocess(os.path.join(btsync_location,"btsync"),"--config",os.path.join(config_storage_path,r"btsync_config.txt"))
-    address = ''
-    port = ''
+    command = ''+str(path.join(btsync_location,"btsync"))+" --config "+str(path.join(config_storage_path,r"btsync_config.txt"))
+    print '[command] '+command
+    print (command.split())
+    
+    subprocess.call(command.split(), shell=False)
+    address = '127.0.0.1'
+    port = '8888'
     return [address, port]
     
-def get_folders(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret):
+def get_folders(folder_secret, address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Returns an array with folders info. If a secret is specified, will return info about the folder with this secret.
     
@@ -63,7 +73,7 @@ def get_folders(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), fold
         #return the json info, format as follows
         return folder_info
     
-def add_folder(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_path, folder_secret, selective_sync):
+def add_folder(folder_path, folder_secret, selective_sync, address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Adds a folder to Sync. If a secret is not specified, it will be generated automatically. 
     The folder will have to pre-exist on the disk and Sync will add it into a list of syncing folders.
@@ -94,11 +104,11 @@ def add_folder(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folde
         #return the json info, format as follows
         return error
 
-def remove_folder(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret):
+def remove_folder(folder_secret, address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Removes folder from Sync while leaving actual folder and files on disk. 
     It will remove a folder from the Sync list of folders and does not touch any files or folders on disk. 
-    Returns '0' if no error, '1' if there’s no folder with specified secret.
+    Returns '0' if no error, '1' if there's no folder with specified secret.
 
     http://[address]:[port]/api?method=remove_folder&secret=(secret)
 
@@ -116,7 +126,7 @@ def remove_folder(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), fo
         #return the json info, format as follows
         return error
     
-def get_files(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret, sub_path):
+def get_files(folder_secret, sub_path, address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Returns list of files within the specified directory. 
     If a directory is not specified, will return list of files and folders within the root folder. 
@@ -157,7 +167,7 @@ def get_files(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder
         #return the json info, format as follows
         return file_info
     
-def set_file_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret, sub_path, download):
+def set_file_preferences(folder_secret, sub_path, download, address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Selects file for download for selective sync folders. 
     Returns file information with applied preferences.
@@ -182,7 +192,7 @@ def set_file_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.Cur
         #return the json info, format as follows
         return file_info
     
-def get_folder_peers(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret):
+def get_folder_peers( folder_secret, address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(),):
     '''
     Returns list of peers connected to the specified folder.
     [
@@ -212,17 +222,17 @@ def get_folder_peers(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(),
         #return the json info, format as follows
         return folder_info
     
-def get_secrets(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret, type_encrypted="encryption"):
+def get_secrets(folder_secret, address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), type_encrypted="encryption"):
     '''
     Generates read-write, read-only and encryption read-only secrets. 
-    If ‘secret’ parameter is specified, will return secrets available for sharing under this secret.
+    If 'secret' parameter is specified, will return secrets available for sharing under this secret.
     The Encryption Secret is new functionality. 
     This is a secret for a read-only peer with encrypted content (the peer can sync files but can not see their content). One example use is if a user wanted to backup files to an untrusted, unsecure, or public location. This is set to disabled by default for all users but included in the API.
     
     {
         "read_only": "ECK2S6MDDD7EOKKJZOQNOWDTJBEEUKGME",
         "read_write": "DPFABC4IZX33WBDRXRPPCVYA353WSC3Q6",
-        "encryption": "G3PNU7KTYM63VNQZFPP3Q3GAMTPRWDEZ”
+        "encryption": "G3PNU7KTYM63VNQZFPP3Q3GAMTPRWDEZ"
     }
     
     http://[address]:[port]/api?method=get_secrets[&secret=(secret)&type=encryption]
@@ -247,7 +257,7 @@ def get_secrets(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), fold
         #return the json info, format as follows
         return secrets_info
     
-def get_folder_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret):
+def get_folder_preferences( folder_secret, address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Returns preferences for the specified sync folder.
     
@@ -276,10 +286,10 @@ def get_folder_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.C
         #return the json info, format as follows
         return folder_info
     
-def set_folder_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret,
-                           use_dht=0,use_hosts=0,search_lan=1,use_relay_server=0,use_tracker=0,use_sync_trash=0):
+def set_folder_preferences(folder_secret, use_dht=0,use_hosts=0,search_lan=1,use_relay_server=0,use_tracker=0,use_sync_trash=0, 
+                           address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
-    Sets preferences for the specified sync folder. Parameters are the same as in ‘Get folder preferences’. Returns current settings.
+    Sets preferences for the specified sync folder. Parameters are the same as in 'Get folder preferences'. Returns current settings.
     
     http://[address]:[port]/api?method=set_folder_prefs&secret=(secret)&param1=value1&param2=value2,...
     
@@ -287,10 +297,10 @@ def set_folder_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.C
     params - { use_dht, use_hosts, search_lan, use_relay_server, use_tracker, use_sync_trash }
     
     1: DHT - Use DHT (Distributed "Sloppy" Hash Table) to connect to different peers 
-        (if ticked, the instance stores details of other clients it’s connected to and 
+        (if ticked, the instance stores details of other clients it's connected to and 
         shares this with any other clients that connect to it)
         All DHT users store a complete list, and act as pseudo trackers
-    2: Hosts - If you don’t want to use the Bittorrent servers to help connect to other clients, 
+    2: Hosts - If you don't want to use the Bittorrent servers to help connect to other clients, 
         you can add either an IP or domain here. For example, for instances outside my network, 
         I could turn off tracker and relay servers and specify a (dynamic) domain name of a 
         Raspberry Pi here for the client to automatically connect to that client.
@@ -330,7 +340,7 @@ def set_folder_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.C
         #return the json info, format as follows
         return folder_info
     
-def get_folder_hosts(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret):
+def get_folder_hosts( folder_secret, address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Returns list of predefined hosts for the folder, or error code if a secret is not specified.
     
@@ -355,17 +365,17 @@ def get_folder_hosts(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(),
         #return the json info, format as follows
         return host_info
     
-def set_folder_hosts(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret, host_list, port_list):
+def set_folder_hosts(folder_secret, host_list, port_list, address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Sets one or several predefined hosts for the specified sync folder. 
     Existing list of hosts will be replaced. 
-    Hosts should be added as values of the ‘host’ parameter and separated by commas. 
+    Hosts should be added as values of the 'host' parameter and separated by commas. 
     Returns current hosts if set successfully, error code otherwise.
     
     http://[address]:[port]/api?method=set_folder_hosts&secret=(secret)&hosts=host1:port1,host2:port2,...
     
     secret (required) - must specify folder secret
-    hosts (required) - enter list of hosts separated by comma. Host should be represented as “[address]:[port]”
+    hosts (required) - enter list of hosts separated by comma. Host should be represented as "[address]:[port]"
     '''
     c = curl_obj
     data = BytesIO
@@ -387,8 +397,7 @@ def set_folder_hosts(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(),
         #return the json info, format as follows
         return host_info
     
-    
-def get_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), folder_secret, host_list, port_list):
+def get_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
     Returns BitTorrent Sync preferences. 
     Contains dictionary with advanced preferences. 
@@ -425,10 +434,10 @@ def get_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), 
         #return the json info, format as follows
         return host_info
     
-def set_preferences(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl(), 
-                    device_name, download_limit, lang, listening_port, upload_limit, use_upnp):
+def set_preferences(device_name, download_limit, lang, listening_port, upload_limit, use_upnp, 
+                    address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     '''
-    Sets BitTorrent Sync preferences. Parameters are the same as in ‘Get preferences’. 
+    Sets BitTorrent Sync preferences. Parameters are the same as in 'Get preferences'. 
     Advanced preferences are set as general settings. 
     Returns current settings.
     
@@ -526,13 +535,15 @@ def shutdown(address='127.0.0.1', port='8888', curl_obj = pycurl.Curl()):
     http://[address]:[port]/api?method=shutdown
     '''
     c = curl_obj
-    data = BytesIO
+    data = BytesIO()
     if isinstance(address,basestring) and isinstance(port,basestring):
         url = 'http://'+address+':'+port+'/api?method=shutdown'
         c.setopt(c.URL, url)
         c.setopt(c.WRITEFUNCTION,data.write)
         c.perform()
-    
+        
+        data_val = data.getvalue()
+        print 'data_val [ '+data_val+' ]'
         error_info = json.loads(data.getvalue()) # the json info
         error = error_info["error"]
         #return the json info, format as follows
